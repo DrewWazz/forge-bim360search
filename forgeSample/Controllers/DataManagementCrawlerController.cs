@@ -213,13 +213,14 @@ namespace forgeSample.Controllers
             }
 
             IRestResponse res = await client.ExecuteTaskAsync(request);
+            /*
             if (res.StatusCode == HttpStatusCode.OK && Config.SkipAlreadyIndexed)
             {
                 context.WriteLine(string.Format("{0}: already indexed, skip", fileName));
                 System.Threading.Thread.Sleep(1000); // otherwise we'll reach the rate limit...
                 return;
             }
-
+            */
             context.WriteLine(string.Format("{0}: {1}", fileName, versionUrn));
 
             await ModelDerivativeHub.NotifyFileFound(_hubContext, hubId);
