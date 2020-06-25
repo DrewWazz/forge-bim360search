@@ -195,7 +195,14 @@ namespace forgeSample.Controllers
             string versionUrn = (string)item.data.relationships.tip.data.id;
             string fileName = (string)item.data.attributes.displayName;
             string extension = fileName.Split(".").Last().ToLower();
-
+            //TODO: create path for if extension is PDF
+            /*
+            if (extension == "pdf")
+            {
+                await ModelDerivativeHub.NotifyFileFound(_hubContext, hubId);
+                metadataQueue.Create(() => ProcessPDFFile(credentials.UserId, hubId, projectId, folderUrn, itemUrn, versionUrn, fileName, null), state);
+            }
+            */
             if (Config.SupportedFormats.IndexOf(extension) == -1) return;
 
             string absolutePath = string.Format("/manifest/_doc/{0}", ModelDerivativeController.Base64Encode(itemUrn));
@@ -223,7 +230,7 @@ namespace forgeSample.Controllers
             context.WriteLine(string.Format("{0}: {1}", fileName, versionUrn));
 
             await ModelDerivativeHub.NotifyFileFound(_hubContext, hubId);
-            metadataQueue.Create(() => ProcessFile(credentials.UserId, hubId, projectId, folderUrn, itemUrn, versionUrn, fileName, null), state);
+            metadataQueue.Create(() => ProcessFile(credentials.UserId, hubId, projectId, folderUrn, itemUrn, versionUrn, fileName, null), state); //BREAKPOINT HERE!!!!!!!!!!!!!!!!
         }
 
         public async Task ProcessFile(string userId, string hubId, string projectId, string folderUrn, string itemUrn, string versionUrn, string fileName, PerformContext console)
@@ -231,5 +238,12 @@ namespace forgeSample.Controllers
             await ModelDerivativeController.ProcessFileAsync(userId, hubId, projectId, folderUrn, itemUrn, versionUrn, fileName, console);
             await ModelDerivativeHub.NotifyFileComplete(_hubContext, hubId);
         }
+        /*
+        public async Task ProcessPDFFile(string userId, string hubId, string projectId, string folderUrn, string itemUrn, string versionUrn, string fileName, PerformContext console)
+        {
+            await ModelDerivativeController.ProcessFileAsync(userId, hubId, projectId, folderUrn, itemUrn, versionUrn, fileName, console);
+            await ModelDerivativeHub.NotifyFileComplete(_hubContext, hubId);
+        }
+        */
     }
 }

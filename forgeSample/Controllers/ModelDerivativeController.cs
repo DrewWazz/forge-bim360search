@@ -138,8 +138,7 @@ namespace forgeSample.Controllers
             /// </summary>
             public string LocalPath { get; set; }
         }
-
-        public static async Task ProcessFileAsync(string userId, string hubId, string projectId, string folderUrn, string itemUrn, string versionUrn, string fileName, PerformContext console)
+            public static async Task ProcessFileAsync(string userId, string hubId, string projectId, string folderUrn, string itemUrn, string versionUrn, string fileName, PerformContext console)
         {
             Credentials credentials = await Credentials.FromDatabaseAsync(userId);
 
@@ -156,7 +155,8 @@ namespace forgeSample.Controllers
             document.versionUrn = versionUrn;
             document.fileName = fileName;
             document.metadata = new JArray();
-
+            document.metadata.Add(fileName);
+            
             string versionUrn64 = Base64Encode(versionUrn);
             dynamic manifest = await derivative.GetManifestAsync(versionUrn64);
             if (manifest.status == "inprogress") throw new Exception("Translating..."); // force run it again
@@ -166,9 +166,9 @@ namespace forgeSample.Controllers
             List<Resource> resouces = new List<Resource>();
             foreach (ManifestItem item in manifestItems)
             {
-                if (item.MIME != "application/autodesk-db") continue; 
+                if (item.MIME != "application/autodesk-db") continue; //"application/autodesk-db"  image/png
 
-                string file = "objects_vals.json.gz"; // the only file we need here
+                string file = "objects_vals.json.gz"; // the only file we need here objects_vals.json.gz//TODO CHANGE TO PDF!!!!!!!
                 Uri myUri = new Uri(new Uri(item.Path.BasePath), file);
                 resouces.Add(new Resource()
                 {
@@ -201,36 +201,10 @@ namespace forgeSample.Controllers
                 viewProperties.collection = System.Text.RegularExpressions.Regex.Replace(fileStream.ReadToEnd(), @"\n", string.Empty);
                 document.metadata.Add(viewProperties);
             }
-
-
-            // as an alternative solution, using supported APIs, one could get the complete metadata JSON
-            // but that results in more data that we don't need for search, like attribute names
-            /*{
-                dynamic metadata = await derivative.GetMetadataAsync(versionUrn64);
-                foreach (KeyValuePair<string, dynamic> metadataItem in new DynamicDictionaryItems(metadata.data.metadata))
-                {
-                    dynamic properties = await derivative.GetModelviewPropertiesAsync(versionUrn64, metadataItem.Value.guid);
-                    if (properties == null)
-                    {
-                        console.WriteLine("Model not ready, will retry");
-                        throw new Exception("Model not ready...");
-                    }
-                    console.WriteLine(string.Format("View: {0}", (string)metadataItem.Value.guid));
-                    JArray collection = JObject.Parse(properties.ToString()).data.collection;
-
-                    if (collection.Count > 0)
-                    {
-                        dynamic viewProperties = new JObject();
-                        viewProperties.viewId = (string)metadataItem.Value.guid;
-                        viewProperties.collection = collection.ToString(Newtonsoft.Json.Formatting.None);
-                        document.metadata.Add(viewProperties);
-                    }
-                }
-            }*/
-
+            
             string json = (string)document.ToString(Newtonsoft.Json.Formatting.None);
             string absolutePath = string.Format("/manifest/_doc/{0}", Base64Encode(itemUrn));
-
+            
             RestClient elasticSearchclient = new RestClient(Config.ElasticSearchServer);
             RestRequest elasticSearchRequest = new RestRequest(absolutePath, RestSharp.Method.POST);
             elasticSearchRequest.AddHeader("Content-Type", "application/json");
